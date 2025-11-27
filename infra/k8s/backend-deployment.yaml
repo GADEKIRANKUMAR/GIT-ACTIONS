@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: feedback-backend
+  namespace: feedback
+spec:
+  selector:
+    app: feedback-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feedback-backend
+  namespace: feedback
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feedback-backend
+  template:
+    metadata:
+      labels:
+        app: feedback-backend
+    spec:
+      containers:
+        - name: backend
+          image: YOUR_DOCKER_USERNAME/feedback-backend:latest
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql.feedback.svc.cluster.local:3306/feedbackdb
+            - name: SPRING_DATASOURCE_USERNAME
+              value: root
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-root-password
+          ports:
+            - containerPort: 8080

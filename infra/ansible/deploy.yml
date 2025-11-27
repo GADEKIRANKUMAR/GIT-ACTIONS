@@ -1,0 +1,30 @@
+- hosts: feedback-server
+  become: yes
+  tasks:
+    - name: Ensure kubectl is accessible
+      command: kubectl version --client
+      register: kubectl_result
+      failed_when: kubectl_result.rc != 0
+
+    - name: Create k8s directory
+      file:
+        path: /opt/feedback-k8s
+        state: directory
+
+    - name: Copy k8s manifests
+      copy:
+        src: ../k8s/
+        dest: /opt/feedback-k8s/
+        mode: "0644"
+
+    - name: Apply namespace
+      command: kubectl apply -f /opt/feedback-k8s/namespace.yaml
+
+    - name: Apply MySQL
+      command: kubectl apply -f /opt/feedback-k8s/mysql-deployment.yaml
+
+    - name: Apply backend
+      command: kubectl apply -f /opt/feedback-k8s/backend-deployment.yaml
+
+    - name: Apply frontend
+      command: kubectl apply -f /opt/feedback-k8s/frontend-deployment.yaml
